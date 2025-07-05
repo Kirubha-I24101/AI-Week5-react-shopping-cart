@@ -1,30 +1,30 @@
+import React, { useCallback, useMemo } from 'react';
 import formatPrice from 'utils/formatPrice';
 import { ICartProduct } from 'models';
-
 import { useCart } from 'contexts/cart-context';
-
 import * as S from './style';
 
 interface IProps {
   product: ICartProduct;
 }
-const CartProduct = ({ product }: IProps) => {
-  const { removeProduct, increaseProductQuantity, decreaseProductQuantity } =
-    useCart();
-  const {
-    sku,
-    title,
-    price,
-    style,
-    currencyId,
-    currencyFormat,
-    availableSizes,
-    quantity,
-  } = product;
 
-  const handleRemoveProduct = () => removeProduct(product);
-  const handleIncreaseProductQuantity = () => increaseProductQuantity(product);
-  const handleDecreaseProductQuantity = () => decreaseProductQuantity(product);
+const CartProduct = React.memo(({ product }: IProps) => {
+  // Performance monitoring
+  console.time(`CartProduct-${product.id}`);
+
+  const { removeProduct, increaseProductQuantity, decreaseProductQuantity } = useCart();
+
+  const handleRemoveProduct = useCallback(() => removeProduct(product), [removeProduct, product]);
+  const handleIncreaseProductQuantity = useCallback(() => increaseProductQuantity(product), [increaseProductQuantity, product]);
+  const handleDecreaseProductQuantity = useCallback(() => decreaseProductQuantity(product), [decreaseProductQuantity, product]);
+
+  const imageSrc = useMemo(
+    () => require(`static/products/${product.sku}-1-cart.webp`),
+    [product.sku]
+  );
+
+  // End performance monitoring
+  console.timeEnd(`CartProduct-${product.id}`);
 
   return (
     <S.Container>
@@ -33,22 +33,22 @@ const CartProduct = ({ product }: IProps) => {
         title="remove product from cart"
       />
       <S.Image
-        src={require(`static/products/${sku}-1-cart.webp`)}
-        alt={title}
+        src={imageSrc}
+        alt={product.title}
       />
       <S.Details>
-        <S.Title>{title}</S.Title>
+        <S.Title>{product.title}</S.Title>
         <S.Desc>
-          {`${availableSizes[0]} | ${style}`} <br />
-          Quantity: {quantity}
+          {`${product.availableSizes[0]} | ${product.style}`} <br />
+          Quantity: {product.quantity}
         </S.Desc>
       </S.Details>
       <S.Price>
-        <p>{`${currencyFormat}  ${formatPrice(price, currencyId)}`}</p>
+        <p>{`${product.currencyFormat}  ${formatPrice(product.price, product.currencyId)}`}</p>
         <div>
           <S.ChangeQuantity
             onClick={handleDecreaseProductQuantity}
-            disabled={quantity === 1 ? true : false}
+            disabled={product.quantity === 1}
           >
             -
           </S.ChangeQuantity>
@@ -59,6 +59,6 @@ const CartProduct = ({ product }: IProps) => {
       </S.Price>
     </S.Container>
   );
-};
+});
 
 export default CartProduct;
