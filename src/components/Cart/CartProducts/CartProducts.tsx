@@ -1,17 +1,25 @@
-import { ICartProduct } from 'models';
-import CartProduct from './CartProduct';
-
+import React, { useMemo } from 'react';
+import { useCart } from 'contexts/cart-context';
+import CartProduct from './CartProduct/CartProduct';
 import * as S from './style';
 
-interface IProps {
-  products: ICartProduct[];
-}
+const CartProducts = () => {
+  const { products } = useCart();
 
-const CartProducts = ({ products }: IProps) => {
+  // Performance monitoring
+  console.time('filterProducts');
+  const filteredProducts = useMemo(
+    () => products.filter(p => p.quantity > 0),
+    [products]
+  );
+  console.timeEnd('filterProducts');
+
   return (
     <S.Container>
-      {products?.length ? (
-        products.map((p) => <CartProduct product={p} key={p.sku} />)
+      {filteredProducts.length ? (
+        filteredProducts.map((product) => (
+          <CartProduct key={product.sku} product={product} />
+        ))
       ) : (
         <S.CartProductsEmpty>
           Add some products in the cart <br />
